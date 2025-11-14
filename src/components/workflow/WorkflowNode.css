@@ -1,0 +1,5 @@
+.workflow-node {
+  width: 200px;
+  left: var(--node-x);
+  top: var(--node-y);
+}

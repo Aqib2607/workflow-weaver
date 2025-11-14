@@ -47,55 +47,61 @@ FlowBuilder is a visual workflow automation platform that allows users to create
 ## ✨ Features
 
 ### Phase 1: Core Features (MVP)
+
 - ✅ Visual canvas with drag-and-drop interface
 - ✅ Three node types: Trigger, Action, Condition
 - ✅ Node positioning and selection
-- ⬜ Node connections with visual lines
-- ⬜ Node configuration panel
-- ⬜ Workflow save/load functionality
-- ⬜ User authentication
-- ⬜ Basic workflow execution
+- ✅ Node connections with visual lines
+- ✅ Node configuration panel
+- ✅ Workflow save/load functionality
+- ✅ User authentication
+- ✅ Basic workflow execution
 
 ### Phase 2: Advanced Features
-- ⬜ Real-time collaboration
-- ⬜ Workflow versioning
-- ⬜ Execution history and logs
-- ⬜ Workflow templates
-- ⬜ Scheduled workflows (cron jobs)
-- ⬜ Webhook triggers
-- ⬜ Error handling and retries
-- ⬜ Variable system and data transformation
+
+- ✅ Workflow versioning
+- ✅ Execution history and logs
+- ✅ Workflow templates
+- ✅ Scheduled workflows (cron jobs)
+- ✅ Webhook triggers
+- ✅ Error handling and retries
+- ✅ Variable system and data transformation
+- ✅ Real-time collaboration
 
 ### Phase 3: Integrations
-- ⬜ HTTP Request nodes
-- ⬜ Database operations
-- ⬜ Email integration (SMTP, SendGrid)
-- ⬜ Slack integration
-- ⬜ Google Sheets integration
-- ⬜ Webhook receivers
-- ⬜ Custom code execution (JavaScript/PHP)
-- ⬜ File operations
-- ⬜ Third-party API integrations
 
-### Phase 4: Enterprise Features
-- ⬜ Team workspaces
-- ⬜ Role-based access control
-- ⬜ Audit logs
-- ⬜ Workflow analytics
-- ⬜ Performance monitoring
-- ⬜ Custom branding
-- ⬜ SSO integration
+- ✅ HTTP Request nodes
+- ✅ Database operations
+- ✅ Email integration (SMTP, SendGrid)
+- ✅ Slack integration
+- ✅ Google Sheets integration
+- ✅ Webhook receivers
+- ✅ Custom code execution (JavaScript/PHP)
+- ✅ File operations
+- ✅ Third-party API integrations
+
+### Phase 4: Enterprise Features (MVP)
+
+- ✅ Team workspaces with member management
+- ✅ Role-based access control (RBAC)
+- ✅ Audit logs and activity monitoring
+- ✅ Workflow analytics and reporting
+- ✅ Performance monitoring and metrics
+- ✅ Custom branding and theming
+- ✅ SSO integration (OAuth/SAML/OpenID)
 
 ---
 
 ## 💻 System Requirements
 
 ### Frontend Development
+
 - Node.js 18+ and npm/yarn
 - Modern browser (Chrome, Firefox, Safari, Edge)
 - Git
 
 ### Backend Development
+
 - PHP 8.1+
 - Composer
 - MySQL 8.0+ or PostgreSQL 13+
@@ -103,6 +109,7 @@ FlowBuilder is a visual workflow automation platform that allows users to create
 - Laravel 10.x
 
 ### Production Deployment
+
 - Web server (Nginx/Apache)
 - SSL certificate
 - Domain name
@@ -171,8 +178,8 @@ src/
 
 ```bash
 # Create new Laravel project
-composer create-project laravel/laravel flowbuilder-backend
-cd flowbuilder-backend
+composer create-project laravel/laravel backend
+cd backend
 
 # Install dependencies
 composer require laravel/sanctum
@@ -195,8 +202,8 @@ php artisan key:generate
 # Configure database in .env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=flowbuilder
+DB_PORT=3307
+DB_DATABASE=workflow-weaver
 DB_USERNAME=root
 DB_PASSWORD=
 ```
@@ -273,6 +280,7 @@ php artisan queue:work
 ## 🗄️ Database Schema
 
 ### Users Table
+
 ```sql
 CREATE TABLE users (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -286,6 +294,7 @@ CREATE TABLE users (
 ```
 
 ### Workflows Table
+
 ```sql
 CREATE TABLE workflows (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -304,6 +313,7 @@ CREATE TABLE workflows (
 ```
 
 ### Workflow Nodes Table
+
 ```sql
 CREATE TABLE workflow_nodes (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -323,6 +333,7 @@ CREATE TABLE workflow_nodes (
 ```
 
 ### Node Connections Table
+
 ```sql
 CREATE TABLE node_connections (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -340,6 +351,7 @@ CREATE TABLE node_connections (
 ```
 
 ### Workflow Executions Table
+
 ```sql
 CREATE TABLE workflow_executions (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -359,6 +371,7 @@ CREATE TABLE workflow_executions (
 ```
 
 ### Execution Logs Table
+
 ```sql
 CREATE TABLE execution_logs (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -378,6 +391,7 @@ CREATE TABLE execution_logs (
 ```
 
 ### Integrations Table
+
 ```sql
 CREATE TABLE integrations (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -395,6 +409,7 @@ CREATE TABLE integrations (
 ```
 
 ### Webhooks Table
+
 ```sql
 CREATE TABLE webhooks (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -411,6 +426,7 @@ CREATE TABLE webhooks (
 ```
 
 ### Scheduled Tasks Table
+
 ```sql
 CREATE TABLE scheduled_tasks (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -519,6 +535,7 @@ POST   /api/templates/{id}/use           # Create workflow from template
 ### Laravel Sanctum Implementation
 
 **1. Configure Sanctum Middleware**
+
 ```php
 // app/Http/Kernel.php
 'api' => [
@@ -529,6 +546,7 @@ POST   /api/templates/{id}/use           # Create workflow from template
 ```
 
 **2. Auth Controller**
+
 ```php
 // app/Http/Controllers/API/AuthController.php
 <?php
@@ -605,6 +623,7 @@ class AuthController extends Controller
 ```
 
 **3. Protected Routes**
+
 ```php
 // routes/api.php
 use App\Http\Controllers\API\AuthController;
@@ -1003,11 +1022,13 @@ class HttpRequestIntegration
 ### Frontend Deployment (Lovable or Custom)
 
 #### Option 1: Deploy via Lovable
+
 1. Click "Publish" button in Lovable editor
 2. Your app is live at `yourproject.lovable.app`
 3. Configure custom domain in project settings (requires paid plan)
 
 #### Option 2: Self-Host Frontend
+
 ```bash
 # Build frontend
 npm run build
@@ -1020,6 +1041,7 @@ npm run build
 ```
 
 #### Nginx Configuration for Frontend
+
 ```nginx
 server {
     listen 80;
@@ -1261,12 +1283,14 @@ php artisan horizon:publish
 ## 🔧 Environment Variables
 
 ### Frontend (.env)
+
 ```env
 VITE_API_URL=https://api.yourdomain.com/api
 VITE_APP_NAME=FlowBuilder
 ```
 
 ### Backend (.env)
+
 ```env
 # Application
 APP_NAME=FlowBuilder
@@ -1314,6 +1338,7 @@ FRONTEND_URL=https://yourdomain.com
 ## 📊 Development Roadmap
 
 ### Week 1-2: Foundation
+
 - [x] Frontend UI with canvas and nodes
 - [ ] Complete node connection system
 - [ ] Node configuration panel
@@ -1322,6 +1347,7 @@ FRONTEND_URL=https://yourdomain.com
 - [ ] Basic authentication API
 
 ### Week 3-4: Core Workflow Features
+
 - [ ] Workflow CRUD operations
 - [ ] Node persistence
 - [ ] Connection persistence
@@ -1330,6 +1356,7 @@ FRONTEND_URL=https://yourdomain.com
 - [ ] Basic action types (HTTP request, email)
 
 ### Week 5-6: Execution & History
+
 - [ ] Queue system setup
 - [ ] Execution logs
 - [ ] Execution history UI
@@ -1338,6 +1365,7 @@ FRONTEND_URL=https://yourdomain.com
 - [ ] Real-time execution status
 
 ### Week 7-8: Integrations
+
 - [ ] Integration management
 - [ ] HTTP Request node
 - [ ] Email node (SMTP)
@@ -1346,6 +1374,7 @@ FRONTEND_URL=https://yourdomain.com
 - [ ] Schedule triggers (cron)
 
 ### Week 9-10: Advanced Features
+
 - [ ] Variable system
 - [ ] Data transformation
 - [ ] Condition evaluation
@@ -1354,6 +1383,7 @@ FRONTEND_URL=https://yourdomain.com
 - [ ] Import/export workflows
 
 ### Week 11-12: Polish & Deploy
+
 - [ ] Performance optimization
 - [ ] Security audit
 - [ ] API documentation
@@ -1363,6 +1393,7 @@ FRONTEND_URL=https://yourdomain.com
 - [ ] Monitoring setup
 
 ### Future Enhancements
+
 - [ ] Team collaboration
 - [ ] Workflow versioning
 - [ ] Advanced analytics
@@ -1403,6 +1434,7 @@ npm run test
 ## 📚 Additional Resources
 
 ### Documentation to Review
+
 - [Laravel Documentation](https://laravel.com/docs)
 - [Laravel Sanctum](https://laravel.com/docs/sanctum)
 - [Laravel Queues](https://laravel.com/docs/queues)
@@ -1410,6 +1442,7 @@ npm run test
 - [shadcn/ui](https://ui.shadcn.com/)
 
 ### Similar Projects to Study
+
 - [n8n](https://github.com/n8n-io/n8n)
 - [Apache Airflow](https://airflow.apache.org/)
 - [Pipedream](https://pipedream.com/)
@@ -1443,6 +1476,7 @@ When working on this project:
 ## 📧 Support
 
 For questions or issues during development:
+
 - Review Laravel documentation
 - Check React/TypeScript documentation  
 - Test API endpoints with Postman
