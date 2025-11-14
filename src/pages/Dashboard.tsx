@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Play, Settings, Trash2, Copy } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useWorkflow } from "@/hooks/useWorkflow";
-import api from "@/lib/api";
+import { useWorkflowsQuery, useCreateWorkflowMutation, useDeleteWorkflowMutation, useExecuteWorkflowMutation } from "@/hooks/useWorkflowsQuery";
 
 interface WorkflowItem {
   id: string;
@@ -22,36 +21,26 @@ interface WorkflowItem {
 }
 
 const Dashboard = () => {
-  const [workflows, setWorkflows] = useState<WorkflowItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newWorkflow, setNewWorkflow] = useState({ name: "", description: "" });
-  const [isLoading, setIsLoading] = useState(true);
   
   const { user, logout } = useAuth();
-  const { createWorkflow } = useWorkflow();
-
-  useEffect(() => {
-    loadWorkflows();
-  }, []);
-
-  const loadWorkflows = async () => {
-    try {
-      const response = await api.get('/workflows');
-      setWorkflows(response.data.data || response.data || []);
-    } catch (error) {
-      console.error('Failed to load workflows:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const navigate = useNavigate();
+  
+  // React Query hooks
+  const { data: workflows = [], isLoading, error } = useWorkflowsQuery();
+  const createWorkflowMutation = useCreateWorkflowMutation();
+  const deleteWorkflowMutation = useDeleteWorkflowMutation();
+  const executeWorkflowMutation = useExecuteWorkflowMutation();
 
   const handleCreateWorkflow = async () => {
     try {
-      await createWorkflow(newWorkflow);
+      await createWorkflowMutation.mutateAsync(newWorkflow);
       setShowCreateDialog(false);
       setNewWorkflow({ name: "", description: "" });
-      loadWorkflows();
+      // Workflow created successfully - it will appear in the list
+      // User can click the Settings icon to edit it
     } catch (error) {
       console.error('Failed to create workflow:', error);
     }
@@ -61,10 +50,19 @@ const Dashboard = () => {
     if (!confirm('Are you sure you want to delete this workflow?')) return;
     
     try {
-      await api.delete(`/workflows/${id}`);
-      loadWorkflows();
+      await deleteWorkflowMutation.mutateAsync(id);
     } catch (error) {
       console.error('Failed to delete workflow:', error);
+    }
+  };
+
+  const handleExecuteWorkflow = async (id: string) => {
+    try {
+      await executeWorkflowMutation.mutateAsync({ id });
+      alert('Workflow execution started!');
+    } catch (error) {
+      console.error('Failed to execute workflow:', error);
+      alert('Failed to execute workflow');
     }
   };
 
@@ -137,8 +135,12 @@ const Dashboard = () => {
                     placeholder="Describe what this workflow does"
                   />
                 </div>
-                <Button onClick={handleCreateWorkflow} className="w-full">
-                  Create Workflow
+                <Button 
+                  onClick={handleCreateWorkflow} 
+                  className="w-full"
+                  disabled={createWorkflowMutation.isPending}
+                >
+                  {createWorkflowMutation.isPending ? 'Creating...' : 'Create Workflow'}
                 </Button>
               </div>
             </DialogContent>
@@ -192,18 +194,30 @@ const Dashboard = () => {
                       Updated {new Date(workflow.updated_at).toLocaleDateString()}
                     </div>
                     <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" asChild>
-                        <Link to={`/workflow/${workflow.id}`}>
-                          <Settings className="w-4 h-4" />
-                        </Link>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          console.log('Navigating to workflow:', workflow.id);
+                          console.log('Full URL:', `/workflows/${workflow.id}`);
+                          window.location.href = `/workflows/${workflow.id}`;
+                        }}
+                      >
+                        <Settings className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleExecuteWorkflow(workflow.id)}
+                        disabled={executeWorkflowMutation.isPending}
+                      >
                         <Play className="w-4 h-4" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => handleDeleteWorkflow(workflow.id)}
+                        disabled={deleteWorkflowMutation.isPending}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

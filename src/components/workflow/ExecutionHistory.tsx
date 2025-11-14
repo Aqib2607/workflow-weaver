@@ -14,7 +14,7 @@ interface ExecutionHistoryProps {
   onViewExecutionDetails: (execution: WorkflowExecution) => void;
 }
 
-const getStatusIcon = (status: WorkflowExecution["status"]) => {
+const getStatusIcon = (status: WorkflowExecution["status"] | ExecutionLog["status"]) => {
   switch (status) {
     case "success":
       return <CheckCircle className="w-4 h-4 text-green-500" />;
@@ -22,12 +22,14 @@ const getStatusIcon = (status: WorkflowExecution["status"]) => {
       return <XCircle className="w-4 h-4 text-red-500" />;
     case "running":
       return <Play className="w-4 h-4 text-blue-500" />;
+    case "skipped":
+      return <Clock className="w-4 h-4 text-yellow-500" />;
     default:
       return <Clock className="w-4 h-4 text-gray-500" />;
   }
 };
 
-const getStatusColor = (status: WorkflowExecution["status"]) => {
+const getStatusColor = (status: WorkflowExecution["status"] | ExecutionLog["status"]) => {
   switch (status) {
     case "success":
       return "bg-green-100 text-green-800";
@@ -35,6 +37,8 @@ const getStatusColor = (status: WorkflowExecution["status"]) => {
       return "bg-red-100 text-red-800";
     case "running":
       return "bg-blue-100 text-blue-800";
+    case "skipped":
+      return "bg-yellow-100 text-yellow-800";
     default:
       return "bg-gray-100 text-gray-800";
   }

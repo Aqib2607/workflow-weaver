@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import React from 'react'
 import Index from '../pages/Index'
 import { BrowserRouter } from 'react-router-dom'
 
@@ -28,9 +29,9 @@ describe('FlowBuilder MVP Features', () => {
   describe('Node Creation and Management', () => {
     it('should add nodes to canvas', async () => {
       render(
-        <BrowserRouter>
-          <Index currentUser={mockUser} onLogout={() => {}} />
-        </BrowserRouter>
+        React.createElement(BrowserRouter, null,
+          React.createElement(Index, { currentUser: mockUser, onLogout: () => {} })
+        )
       )
 
       // Click on Trigger node button
@@ -43,9 +44,9 @@ describe('FlowBuilder MVP Features', () => {
 
     it('should allow node selection and deletion', async () => {
       render(
-        <BrowserRouter>
-          <Index currentUser={mockUser} onLogout={() => {}} />
-        </BrowserRouter>
+        React.createElement(BrowserRouter, null,
+          React.createElement(Index, { currentUser: mockUser, onLogout: () => {} })
+        )
       )
 
       // Add a node
@@ -69,9 +70,9 @@ describe('FlowBuilder MVP Features', () => {
   describe('Workflow Save/Load', () => {
     it('should save workflow to localStorage', async () => {
       render(
-        <BrowserRouter>
-          <Index currentUser={mockUser} onLogout={() => {}} />
-        </BrowserRouter>
+        React.createElement(BrowserRouter, null,
+          React.createElement(Index, { currentUser: mockUser, onLogout: () => {} })
+        )
       )
 
       // Add a node
@@ -114,9 +115,9 @@ describe('FlowBuilder MVP Features', () => {
       localStorageMock.getItem.mockReturnValue(JSON.stringify(mockWorkflows))
 
       render(
-        <BrowserRouter>
-          <Index currentUser={mockUser} onLogout={() => {}} />
-        </BrowserRouter>
+        React.createElement(BrowserRouter, null,
+          React.createElement(Index, { currentUser: mockUser, onLogout: () => {} })
+        )
       )
 
       // Click load button
@@ -140,9 +141,9 @@ describe('FlowBuilder MVP Features', () => {
   describe('Workflow Execution', () => {
     it('should execute workflow and show logs', async () => {
       render(
-        <BrowserRouter>
-          <Index currentUser={mockUser} onLogout={() => {}} />
-        </BrowserRouter>
+        React.createElement(BrowserRouter, null,
+          React.createElement(Index, { currentUser: mockUser, onLogout: () => {} })
+        )
       )
 
       // Add a trigger node
@@ -170,9 +171,9 @@ describe('FlowBuilder MVP Features', () => {
       window.alert = alertMock
 
       render(
-        <BrowserRouter>
-          <Index currentUser={mockUser} onLogout={() => {}} />
-        </BrowserRouter>
+        React.createElement(BrowserRouter, null,
+          React.createElement(Index, { currentUser: mockUser, onLogout: () => {} })
+        )
       )
 
       // Click execute without nodes
@@ -187,9 +188,9 @@ describe('FlowBuilder MVP Features', () => {
   describe('Authentication', () => {
     it('should display user info in header', () => {
       render(
-        <BrowserRouter>
-          <Index currentUser={mockUser} onLogout={() => {}} />
-        </BrowserRouter>
+        React.createElement(BrowserRouter, null,
+          React.createElement(Index, { currentUser: mockUser, onLogout: () => {} })
+        )
       )
 
       expect(screen.getByText('Demo User')).toBeInTheDocument()

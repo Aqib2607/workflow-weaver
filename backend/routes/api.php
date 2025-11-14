@@ -15,6 +15,7 @@ use App\Http\Middleware\RateLimitMiddleware;
 use App\Http\Controllers\API\AnalyticsController;
 use App\Http\Controllers\API\TeamController;
 use App\Http\Controllers\API\DocumentationController;
+use App\Http\Controllers\API\AIController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -86,6 +87,14 @@ Route::middleware(['auth:sanctum', SecurityHeaders::class, RateLimitMiddleware::
 
     // Workflow duplication
     Route::post('/workflows/{workflow}/duplicate', [WorkflowController::class, 'duplicate']);
+
+    // AI routes with rate limiting
+    Route::middleware(['throttle:ai'])->group(function () {
+        Route::post('/ai/chat', [AIController::class, 'chat']);
+        Route::get('/ai/usage', [AIController::class, 'usage']);
+        Route::get('/ai/costs', [AIController::class, 'costs']);
+        Route::post('/ai/cache/clear', [AIController::class, 'clearCache']);
+    });
 });
 
 // Public routes

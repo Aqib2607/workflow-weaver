@@ -89,16 +89,22 @@ export const useWorkflow = (): UseWorkflowReturn => {
     if (!workflow) return;
     
     const nodeId = `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const newNode: WorkflowNode = { ...node, id: nodeId };
+    const newNode: WorkflowNode = { 
+      ...node, 
+      id: nodeId,
+      node_id: nodeId,
+      label: node.label || node.data?.label || 'New Node',
+      config: node.config || node.data?.config || {},
+    };
     
     try {
       await api.post(`/workflows/${workflow.id}/nodes`, {
         node_id: nodeId,
         type: node.type,
-        label: node.data.label,
+        label: newNode.label,
         position_x: node.position.x,
         position_y: node.position.y,
-        config: node.data.config || {},
+        config: newNode.config,
       });
       setNodes(prev => [...prev, newNode]);
     } catch (err: unknown) {
@@ -110,12 +116,16 @@ export const useWorkflow = (): UseWorkflowReturn => {
   const updateNode = useCallback(async (id: string, updates: Partial<WorkflowNode>) => {
     try {
       const updateData: Record<string, unknown> = {};
-      if (updates.data?.label) updateData.label = updates.data.label;
+      if (updates.label || updates.data?.label) {
+        updateData.label = updates.label || updates.data?.label;
+      }
       if (updates.position) {
         updateData.position_x = updates.position.x;
         updateData.position_y = updates.position.y;
       }
-      if (updates.data?.config) updateData.config = updates.data.config;
+      if (updates.config || updates.data?.config) {
+        updateData.config = updates.config || updates.data?.config;
+      }
       
       await api.put(`/nodes/${id}`, updateData);
       setNodes(prev => prev.map(node => 
@@ -150,6 +160,7 @@ export const useWorkflow = (): UseWorkflowReturn => {
       await api.post(`/workflows/${workflow.id}/connections`, {
         source_node_id: connection.from,
         target_node_id: connection.to,
+        connection_type: connection.connection_type || 'success',
       });
       setConnections(prev => [...prev, newConnection]);
     } catch (err: unknown) {
@@ -168,13 +179,16 @@ export const useWorkflow = (): UseWorkflowReturn => {
     }
   }, []);
 
-  const executeWorkflow = useCallback(async () => {
+  const executeWorkflow = useCallback(async (triggerData?: Record<string, unknown>) => {
     if (!workflow) return;
     
     setIsLoading(true);
     setError(null);
     try {
-      await api.post(`/workflows/${workflow.id}/executions`);
+      const response = await api.post(`/workflows/${workflow.id}/execute`, {
+        trigger_data: triggerData || {},
+      });
+      return response.data;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to execute workflow';
       setError(errorMessage);

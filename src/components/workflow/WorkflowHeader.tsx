@@ -2,7 +2,14 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Save, Zap, ArrowLeft, User, LogOut, History } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Play, Save, Zap, ArrowLeft, User, LogOut, History, Settings, Webhook, Clock, Plug } from "lucide-react";
+import { AIWorkflowGenerator } from "./AIWorkflowGenerator";
+import { IntegrationPanel } from "./IntegrationPanel";
+import { WebhookPanel } from "./WebhookPanel";
+import { SchedulePanel } from "./SchedulePanel";
+import { WorkflowNode, NodeConnection } from "@/types/workflow";
 
 interface User {
   id: number;
@@ -15,13 +22,19 @@ interface WorkflowHeaderProps {
   onSave: () => void;
   onExecute: () => void;
   user: User | null;
+  onWorkflowGenerated?: (nodes: WorkflowNode[], connections: NodeConnection[]) => void;
+  showExecutionHistory?: boolean;
+  onToggleExecutionHistory?: () => void;
 }
 
 const WorkflowHeader = ({
   workflowName,
   onSave,
   onExecute,
-  user
+  user,
+  onWorkflowGenerated,
+  showExecutionHistory,
+  onToggleExecutionHistory
 }: WorkflowHeaderProps) => {
 
   return (
@@ -46,10 +59,80 @@ const WorkflowHeader = ({
           <span className="text-sm text-muted-foreground">{user?.name || 'User'}</span>
         </div>
 
+        {onWorkflowGenerated && (
+          <AIWorkflowGenerator onWorkflowGenerated={onWorkflowGenerated} />
+        )}
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Settings className="w-4 h-4 mr-2" />
+              Manage
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <Dialog>
+              <DialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <Plug className="w-4 h-4 mr-2" />
+                  Integrations
+                </DropdownMenuItem>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Manage Integrations</DialogTitle>
+                </DialogHeader>
+                <IntegrationPanel />
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <Webhook className="w-4 h-4 mr-2" />
+                  Webhooks
+                </DropdownMenuItem>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Manage Webhooks</DialogTitle>
+                </DialogHeader>
+                <WebhookPanel workflowId={useParams().id || ''} />
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <Clock className="w-4 h-4 mr-2" />
+                  Schedules
+                </DropdownMenuItem>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Manage Schedules</DialogTitle>
+                </DialogHeader>
+                <SchedulePanel workflowId={useParams().id || ''} />
+              </DialogContent>
+            </Dialog>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {onToggleExecutionHistory && (
+          <Button 
+            variant={showExecutionHistory ? "default" : "outline"} 
+            size="sm" 
+            onClick={onToggleExecutionHistory}
+          >
+            <History className="w-4 h-4 mr-2" />
+            {showExecutionHistory ? 'Hide History' : 'Show History'}
+          </Button>
+        )}
+        
         <Button variant="outline" size="sm" asChild>
           <Link to={`/workflows/${useParams().id}/executions`}>
             <History className="w-4 h-4 mr-2" />
-            History
+            Full History
           </Link>
         </Button>
 

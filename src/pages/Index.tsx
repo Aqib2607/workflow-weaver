@@ -1,75 +1,86 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import WorkflowCanvas from "@/components/workflow/WorkflowCanvas";
 import WorkflowSidebar from "@/components/workflow/WorkflowSidebar";
 import WorkflowHeader from "@/components/workflow/WorkflowHeader";
 import NodeConfigPanel from "@/components/workflow/NodeConfigPanel";
-import { useWorkflow } from "@/hooks/useWorkflow";
+import ExecutionHistory from "@/components/workflow/ExecutionHistory";
 import { useAuth } from "@/hooks/useAuth";
-import { WorkflowNode, NodeConnection } from "@/types/workflow";
+import { WorkflowNode, NodeConnection, WorkflowExecution } from "@/types/workflow";
+import { useWorkflowQuery, useWorkflowNodesQuery, useWorkflowConnectionsQuery, useExecuteWorkflowMutation, useUpdateWorkflowMutation } from "@/hooks/useWorkflowsQuery";
+import { useAddNodeMutation, useUpdateNodeMutation, useDeleteNodeMutation, useAddConnectionMutation, useDeleteConnectionMutation } from "@/hooks/useNodesQuery";
+import { useExecutionsQuery, useRetryExecutionMutation } from "@/hooks/useExecutionsQuery";
 
 const Index = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
   const [showConfigPanel, setShowConfigPanel] = useState(false);
+  const [showExecutionHistory, setShowExecutionHistory] = useState(false);
   
-  const {
-    workflow,
-    nodes,
-    connections,
-    isLoading,
-    error,
-    loadWorkflow,
-    saveWorkflow,
-    addNode,
-    updateNode,
-    deleteNode,
-    addConnection,
-    deleteConnection,
-    executeWorkflow,
-  } = useWorkflow();
-
-  useEffect(() => {
-    if (id) {
-      loadWorkflow(id);
-    }
-  }, [id, loadWorkflow]);
+  // React Query hooks
+  const { data: workflow, isLoading: workflowLoading, error: workflowError } = useWorkflowQuery(id || '');
+  const { data: nodes = [], isLoading: nodesLoading } = useWorkflowNodesQuery(id || '');
+  const { data: connections = [], isLoading: connectionsLoading } = useWorkflowConnectionsQuery(id || '');
+  const { data: executions = [], isLoading: executionsLoading } = useExecutionsQuery(id || '');
+  
+  // Mutations
+  const updateWorkflowMutation = useUpdateWorkflowMutation();
+  const executeWorkflowMutation = useExecuteWorkflowMutation();
+  const addNodeMutation = useAddNodeMutation();
+  const updateNodeMutation = useUpdateNodeMutation();
+  const deleteNodeMutation = useDeleteNodeMutation();
+  const addConnectionMutation = useAddConnectionMutation();
+  const deleteConnectionMutation = useDeleteConnectionMutation();
+  const retryExecutionMutation = useRetryExecutionMutation();
+  
+  const isLoading = workflowLoading || nodesLoading || connectionsLoading;
+  const error = workflowError?.message;
 
   const handleAddNode = (type: WorkflowNode["type"]) => {
+    if (!id) return;
+    
     const newNode: Omit<WorkflowNode, 'id'> = {
+      node_id: '',
       type,
+      label: type.charAt(0).toUpperCase() + type.slice(1),
       position: { x: 300, y: 200 },
+      config: {},
       data: {
         label: type.charAt(0).toUpperCase() + type.slice(1),
         config: {},
       },
     };
-    addNode(newNode);
+    addNodeMutation.mutate({ workflowId: id, node: newNode });
   };
 
-  const handleUpdateNodePosition = (id: string, position: { x: number; y: number }) => {
-    updateNode(id, { position });
+  const handleUpdateNodePosition = (nodeId: string, position: { x: number; y: number }) => {
+    if (!id) return;
+    updateNodeMutation.mutate({ workflowId: id, nodeId, updates: { position } });
   };
 
-  const handleDeleteNode = (id: string) => {
-    deleteNode(id);
-    if (selectedNode?.id === id) {
+  const handleDeleteNode = (nodeId: string) => {
+    if (!id) return;
+    deleteNodeMutation.mutate({ workflowId: id, nodeId });
+    if (selectedNode?.id === nodeId) {
       setSelectedNode(null);
       setShowConfigPanel(false);
     }
   };
 
   const handleAddConnection = (connection: Omit<NodeConnection, "id">) => {
-    addConnection(connection);
+    if (!id) return;
+    addConnectionMutation.mutate({ workflowId: id, connection });
   };
 
-  const handleDeleteConnection = (id: string) => {
-    deleteConnection(id);
+  const handleDeleteConnection = (connectionId: string) => {
+    if (!id) return;
+    deleteConnectionMutation.mutate({ workflowId: id, connectionId });
   };
 
   const handleSaveNodeConfig = (nodeId: string, nodeData: WorkflowNode['data']) => {
-    updateNode(nodeId, { data: nodeData });
+    if (!id) return;
+    updateNodeMutation.mutate({ workflowId: id, nodeId, updates: { data: nodeData } });
   };
 
   const handleSelectNode = (node: WorkflowNode) => {
@@ -78,17 +89,82 @@ const Index = () => {
   };
 
   const handleExecuteWorkflow = async () => {
-    if (nodes.length === 0) {
+    if (!id || nodes.length === 0) {
       alert("Cannot execute empty workflow. Add some nodes first.");
       return;
     }
     
     try {
-      await executeWorkflow();
+      await executeWorkflowMutation.mutateAsync({ id });
       alert("Workflow execution started!");
+      setShowExecutionHistory(true); // Show execution history after starting
     } catch (error) {
       alert("Failed to execute workflow");
     }
+  };
+
+  const handleRetryExecution = async (executionId: string) => {
+    if (!id) return;
+    try {
+      await retryExecutionMutation.mutateAsync({ workflowId: id, executionId });
+      alert("Execution retry started!");
+    } catch (error) {
+      alert("Failed to retry execution");
+    }
+  };
+
+  const handleViewExecutionDetails = (execution: WorkflowExecution) => {
+    // This could open a detailed view or navigate to execution details page
+    console.log('View execution details:', execution);
+  };
+
+  const handleSaveWorkflow = async () => {
+    if (!id || !workflow) return;
+    
+    try {
+      await updateWorkflowMutation.mutateAsync({ 
+        id, 
+        data: { name: workflow.name, description: workflow.description } 
+      });
+    } catch (error) {
+      console.error('Failed to save workflow:', error);
+    }
+  };
+
+  const handleWorkflowGenerated = (generatedNodes: WorkflowNode[], generatedConnections: NodeConnection[]) => {
+    if (!id) return;
+    
+    // Clear existing workflow
+    nodes.forEach(node => deleteNodeMutation.mutate({ workflowId: id, nodeId: node.id }));
+    connections.forEach(conn => deleteConnectionMutation.mutate({ workflowId: id, connectionId: conn.id }));
+    
+    // Add generated nodes
+    generatedNodes.forEach(node => {
+      addNodeMutation.mutate({
+        workflowId: id,
+        node: {
+          node_id: '',
+          type: node.type,
+          label: node.label || node.data?.label || 'Generated Node',
+          position: node.position,
+          config: node.config || node.data?.config || {},
+          data: node.data,
+        },
+      });
+    });
+    
+    // Add generated connections (with delay to ensure nodes exist)
+    setTimeout(() => {
+      generatedConnections.forEach(conn => {
+        addConnectionMutation.mutate({
+          workflowId: id,
+          connection: {
+            from: conn.from,
+            to: conn.to,
+          },
+        });
+      });
+    }, 100);
   };
 
   if (isLoading) {
@@ -111,9 +187,12 @@ const Index = () => {
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <WorkflowHeader
         workflowName={workflow?.name || "Untitled Workflow"}
-        onSave={saveWorkflow}
+        onSave={handleSaveWorkflow}
         onExecute={handleExecuteWorkflow}
         user={user}
+        onWorkflowGenerated={handleWorkflowGenerated}
+        showExecutionHistory={showExecutionHistory}
+        onToggleExecutionHistory={() => setShowExecutionHistory(!showExecutionHistory)}
       />
       <div className="flex flex-1 overflow-hidden">
         <WorkflowSidebar onAddNode={handleAddNode} />
@@ -145,6 +224,13 @@ const Index = () => {
             </div>
           )}
         </div>
+        {showExecutionHistory && (
+          <ExecutionHistory
+            executions={executions}
+            onRetryExecution={handleRetryExecution}
+            onViewExecutionDetails={handleViewExecutionDetails}
+          />
+        )}
       </div>
     </div>
   );
